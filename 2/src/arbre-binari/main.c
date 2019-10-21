@@ -5,6 +5,7 @@
  * This file is an example that uses the red-black-tree.c functions.
  *
  * Lluis Garrido, July 2019.
+ * Update: Taras Yarema, October 2019.
  *
  */
 
@@ -14,7 +15,12 @@
 
 #include "red-black-tree.h"
 
-#define MAXVALUE 10
+#define DEFAULT_VALUE 100
+#define STR_LEN 3
+#define DEBUG 0
+
+// Helper function to generate random keys
+char *rand_string(size_t);
 
 /**
  *
@@ -25,79 +31,120 @@
 
 int main(int argc, char **argv)
 {
-  int a, maxnum, ct;
+  int a, maxnum;
+  unsigned long long int ct = 0;
+  char *str;
 
   rb_tree *tree;
   node_data *n_data;
 
   if (argc != 2)
-  {
-    printf("Usage: %s maxnum\n", argv[0]);
-    exit(1);
-  }
+    maxnum = DEFAULT_VALUE;
+  else
+    maxnum = atoi(argv[1]);
 
-  maxnum = atoi(argv[1]);
+  if (DEBUG)
+    printf("Test with red-black-tree\n");
 
-  printf("Test with red-black-tree\n");
-
-  /* Random seed */
   srand(time(NULL));
 
-  /* Allocate memory for tree */
-  tree = (rb_tree *) malloc(sizeof(rb_tree));
-
-  /* Initialize the tree */
+  tree = (rb_tree *)malloc(sizeof(rb_tree));
   init_tree(tree);
 
-  for (ct = 0; ct < maxnum; ct++) {
-    /* Generate random key to be inserted in the tree */
-    a = rand() % MAXVALUE + 1;
+  for (ct = 0; ct < maxnum; ct++)
+  {
+    str = rand_string(STR_LEN);
+    n_data = find_node(tree, str);
 
-    /* Search if the key is in the tree */
-    n_data = find_node(tree, a); 
-
-    if (n_data != NULL) {
-
-      /* If the key is in the tree increment 'num' */
+    if (n_data != NULL)
+    {
       n_data->num_times++;
-    } else {
+      free(str);
 
-      /* If the key is not in the tree, allocate memory for the data
-       * and insert in the tree */
-
+      if (DEBUG)
+        printf("%s:  %d\n", str, n_data->num_times);
+    }
+    else
+    {
       n_data = malloc(sizeof(node_data));
-      
-      /* This is the key by which the node is indexed in the tree */
-      n_data->key = a;
-      
-      /* This is additional information that is stored in the tree */
+
+      n_data->key = str;
       n_data->num_times = 1;
 
-      /* We insert the node in the tree */
       insert_node(tree, n_data);
+
+      if (DEBUG)
+        printf("%s:  CREATED\n", str);
     }
   }
-  
-  /* We now dump the information of the tree to screen */
 
-  ct = 0;
+  if (DEBUG)
+    printf("\n\n");
 
-  for(a = 1; a <= MAXVALUE; a++)
+  /** 
+   * 
+   * As we generated the keys randomly and did not store them,
+   * we must just guess some and see if the random key is in
+   * the tree...
+   *
+   */
+
+  for (a = 0; a < maxnum; a++)
   {
-    n_data = find_node(tree, a);
+    str = rand_string(STR_LEN);
+    n_data = find_node(tree, str);
 
-    if (n_data) { 
-      printf("El numero %d apareix %d cops a l'arbre.\n", a, n_data->num_times);
+    if (n_data)
+    {
+      if (DEBUG)
+        printf("%s:  %d\n", n_data->key, n_data->num_times);
+
       ct += n_data->num_times;
     }
+    else
+    {
+      if (DEBUG)
+        printf("%s:  0\n", str);
+    }
+
+    free(str);
   }
 
-  printf("Nombre total que vegades que s'ha accedit a l'arbre: %d\n", ct);
-  
-  /* Delete the tree */
+  printf("Accessed the tree %lld times.\n", ct);
+
   delete_tree(tree);
   free(tree);
 
   return 0;
 }
 
+/** 
+ * 
+ * Function that returns a dynamically
+ * generated random string of size len - 1
+ * 
+ */
+
+char *rand_string(size_t len)
+{
+  static char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  char *str = NULL;
+
+  if (len)
+  {
+    str = malloc(sizeof(char) * (len + 1));
+
+    if (str)
+    {
+      for (int n = 0; n < len; n++)
+      {
+        int key = rand() % (int)(sizeof(charset) - 1);
+        str[n] = charset[key];
+      }
+
+      str[len] = 0;
+    }
+  }
+
+  return str;
+}

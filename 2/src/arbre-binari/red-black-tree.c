@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 #include "red-black-tree.h"
 
@@ -36,7 +37,15 @@
  */
 
 void free_node_data(node_data *data)
-{
+{   
+    /**
+     * 
+     * We need to free the key before 
+     * the data, as it's a char pointer :)
+     * 
+     */
+
+    free(data->key);
     free(data);
 }
 
@@ -47,16 +56,21 @@ void free_node_data(node_data *data)
  *
  */
 
-int compare_key1_less_than_key2(int key1, int key2)
+int compare_key1_less_than_key2(char *key1, char *key2)
 {
-    int rc;
+    /**
+     * 
+     * We will compare the common substring of key1 (s1) and key2 (s2), 
+     * and check if the alphabetical order of s1 is ahead of s2.
+     * 
+     */
+ 
+    int max = (strlen(key1) > strlen(key2)) ? strlen(key2) : strlen(key1);
 
-    rc = 0;
+    for (int i = 0; i < max; i++)
+        if (tolower(key1[i]) < tolower(key2[i])) return 0;
 
-    if (key1 < key2)
-        rc = 1;
-
-    return rc;
+    return 1;
 }
 
 /**
@@ -66,16 +80,23 @@ int compare_key1_less_than_key2(int key1, int key2)
  *
  */
 
-int compare_key1_equal_to_key2(int key1, int key2)
+int compare_key1_equal_to_key2(char *key1, char *key2)
 {
-    int rc;
+    /**
+     *
+     * We first compare the lengths, then we loop over the
+     * keys letters and check it they are equal.
+     * 
+     */
 
-    rc = 0;
+    if (strlen(key1) != strlen(key2)) 
+        return 0;
 
-    if (key1 == key2)
-        rc = 1;
+    for (int i = 0; i < strlen(key1); i++)
+        if (tolower(key1[i]) != tolower(key2[i])) 
+            return 0;
 
-    return rc;
+    return 1;
 }
 
 /**
@@ -104,7 +125,7 @@ void init_tree(rb_tree *tree)
  *
  */
 
-node_data *find_node(rb_tree *tree, int key) {
+node_data *find_node(rb_tree *tree, char *key) {
 
     node *current = tree->root;
     while(current != NIL)
