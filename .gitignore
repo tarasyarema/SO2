@@ -1,5 +1,7 @@
 # Personal
 base_dades/
+data/
+test/
 
 # Prerequisites
 *.d

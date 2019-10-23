@@ -65,7 +65,7 @@ int compare_key1_less_than_key2(char *key1, char *key2)
     int max = (strlen(key1) > strlen(key2)) ? strlen(key2) : strlen(key1);
 
     for (int i = 0; i < max; i++)
-        if (tolower(key1[i]) < tolower(key2[i]))
+        if (tolower(key1[i]) > tolower(key2[i]))
             return 0;
 
     return 1;
