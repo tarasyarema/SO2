@@ -3,7 +3,7 @@
 
 #define MAXCHAR 100
 
-int read_dict()
+int main(void)
 {
   FILE *fp;
   char word[MAXCHAR];
@@ -21,5 +21,3 @@ int read_dict()
 
   return  0;
 }
-
-

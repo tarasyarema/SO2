@@ -16,8 +16,8 @@
 #include "red-black-tree.h"
 
 #define DEFAULT_VALUE 100
-#define STR_LEN 3
-#define DEBUG 0
+#define STR_LEN 2
+#define DEBUG 1
 
 // Helper function to generate random keys
 char *rand_string(size_t);
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
       free(str);
 
       if (DEBUG)
-        printf("%s:  %d\n", str, n_data->num_times);
+        printf("%s:  %d\n", n_data->key, n_data->num_times);
     }
     else
     {
