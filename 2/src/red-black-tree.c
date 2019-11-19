@@ -59,6 +59,14 @@ void free_node_data(node_data *data)
 
 int compare_key1_less_than_key2(char *key1, char *key2)
 {
+    if (strcasecmp(key1, key2) < 0)
+        return 1;
+
+    return 0;
+}
+
+int _compare_key1_less_than_key2(char *key1, char *key2)
+{
     // We will compare the common substring of key1 (s1) and key2 (s2), 
     // and check if the alphabetical order of s1 is ahead of s2.
 
@@ -79,6 +87,14 @@ int compare_key1_less_than_key2(char *key1, char *key2)
  */
 
 int compare_key1_equal_to_key2(char *key1, char *key2)
+{
+    if (strcasecmp(key1, key2) == 0) 
+        return 1;
+
+    return 0;
+}
+
+int _compare_key1_equal_to_key2(char *key1, char *key2)
 {
     // We first compare the lengths, then we loop over the
     // keys letters and check it they are equal
