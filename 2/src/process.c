@@ -42,18 +42,33 @@ void process_line(rb_tree *tree, char *line)
                 paraula[j] = line[i];
             else
             {
-                // The changes are here
+                // The changes are here:
                 // If the current character
-                // is a '\'' we check if the
-                // characters before and after isalpha
-
+                // is a "'" (apostrophe) or a "-" (slash).
+                // Then we check if the character 
+                // before is alpha.
+                
                 if (line[i] == '\'')
                 {
-                    if (i > 0 && i + 1 < len_line)
-                        if (isalpha(line[i - 1] && isalpha(line[i + 1])))
+                    if (i > 0 && i+1 < len_line)
+                        if (isalpha(line[i-1]) && isalpha(line[i+1]))
                             continue;
-
+                    
                     break;
+                }
+
+                if (line[i] == '-')
+                {
+                    if (i > 0 && i+1 < len_line)
+                    {
+                        if (isalpha(line[i-1]) && isalpha(line[i+1]))
+                            break;
+                    }
+                    else if (i > 0)
+                    {
+                        if (isalpha(line[i-1]))
+                            break;
+                    }
                 }
                 
                 is_word = 0;

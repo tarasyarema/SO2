@@ -65,7 +65,7 @@ int main(int argc, char **argv)
    // Bash version:
    // sort -t "," -k2 -rn <data_file> | head -10
 
-   if (print_tree_positive(tree, dictionary) != 0)
+   if (print_tree_positive_n(tree, dictionary, 10) != 0)
    {
       fprintf(stderr, "Error");
       exit(1);
