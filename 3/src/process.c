@@ -125,10 +125,7 @@ int process_file(rb_tree *tree, const char *f_name)
 
     fp = fopen(f_name, "r");
     if (!fp)
-    {
-        fprintf(stderr, "Could not open file: %s\n", f_name);
         return 1;
-    }
 
     start = clock();
 
@@ -172,10 +169,7 @@ int process_list_files(rb_tree *tree, const char *fl_name, const char *path)
 
     fp = fopen(fl_name, "r");
     if (!fp)
-    {
-        fprintf(stderr, "Could not open file: %s\n", fl_name);
         return 1;
-    }
 
     start = clock();
 

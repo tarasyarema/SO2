@@ -6,8 +6,35 @@
 #include "red-black-tree.h"
 
 /**
+ * 
+ *  Menu
+ * 
+ */
+
+int menu() 
+{
+    char str[5];
+    int opcio;
+
+    printf("\n\nMenu\n\n");
+    printf(" 1 - Creacio de l'arbre\n");
+    printf(" 2 - Emmagatzemar arbre a disc\n");
+    printf(" 3 - Llegir arbre de disc\n");
+    printf(" 4 - Consultar informacio de l'arbre\n");
+    printf(" 5 - Sortir\n\n");
+    printf("   Escull opcio: ");
+
+    fgets(str, 5, stdin);
+    opcio = atoi(str); 
+
+    return opcio;
+}
+
+/**
  *
- *
+ * DFS implementation
+ * Recursive algorithm to find the node with 
+ * most occurences in a Red-Black tree
  *
  */
 

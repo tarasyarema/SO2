@@ -1,10 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-#define MAXCHAR      100
-#define MAGIC_NUMBER 0x01234567
+/*
+ *
+ * Helper function to generate random
+ * strings, so I can test the write function
+ *
+ */
 
 char *rand_string(size_t len)
 {
@@ -30,43 +29,47 @@ char *rand_string(size_t len)
   return str;
 }
 
-int main()
+/*
+ *
+ * Write the content of a Red Balck Tree to
+ * a file in the correct format
+ *
+ */
+
+int write_tree_file(rb_tree *tree, const char *file_name)
 {
-    FILE *f;
-    
-    char *str;
-    int N = 13, magic = MAGIC_NUMBER;
+  FILE *f;
+  
+  int N = tree->size, magic = MAGIC_NUMBER;
 
-    f = fopen("test", "w");
+  f = fopen(file_name, "w");
 
-    if (f == NULL)
-    {
-        fprintf(stderr, "Error opening file.\n");
-        exit(1);
-    }
+  if (f == NULL)
+      return 1;
 
-    srand(time(NULL));
+  fwrite(&magic, 1, sizeof(int), f);
+  fwrite(&N, 1, sizeof(int), f);
 
-    fwrite(&magic, 1, sizeof(int), f);
-    fwrite(&N, 1, sizeof(int), f);
 
-    fprintf(stdout, "#%d\n", N);
+  // Juicy part...
+  // TODO
 
-    for (int i = 0; i < N; i++)
-    {
-        int r_len = (rand() + 4) % 20, r_n = rand();
-        str = rand_string(r_len);
-        
-        fprintf(stdout, "(%d) %s: %d\n", r_len, str, r_n);
+  /*
+  for (int i = 0; i < N; i++)
+  {
+      int r_len = (rand() + 4) % 20, r_n = rand();
+      str = rand_string(r_len);
+      
+      fprintf(stdout, "(%d) %s: %d\n", r_len, str, r_n);
 
-        fwrite(&r_len, 1, sizeof(int), f);
-        fwrite(str, r_len, sizeof(char), f);
-        fwrite(&r_n, 1, sizeof(int), f);
+      fwrite(&r_len, 1, sizeof(int), f);
+      fwrite(str, r_len, sizeof(char), f);
+      fwrite(&r_n, 1, sizeof(int), f);
 
-        free(str);
-    }
+      free(str);
+  }
+  */
 
-    fclose(f);
-
-    return 0;
+  fclose(f);
+  return 0;
 }
