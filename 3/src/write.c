@@ -31,16 +31,37 @@ char *rand_string(size_t len)
 
 /*
  *
- * Write the content of a Red Balck Tree to
+ * DFS Implementation
+ * Helper fucntion to write the content 
+ * of a Red Balck Tree to
  * a file in the correct format
  *
  */
+
+void write_node(node *n, FILE *f)
+{
+  int str_len = strlen(n->data->key);
+
+  // Write the node data to 
+  // the given file
+
+  fwrite(&str_len, 1, sizeof(int), f);
+  fwrite(n->data->key, str_len, sizeof(char), f);
+  fwrite(&(n->data->num_times), 1, sizeof(int), f);
+
+  if (n->right != NIL)
+    write_node(n->right, f);
+  
+  if (n->left != NIL)
+    write_node(n->left, f);
+}
+
 
 int write_tree_file(rb_tree *tree, const char *file_name)
 {
   FILE *f;
   
-  int N = tree->size, magic = MAGIC_NUMBER;
+  int N = tree->num_nodes, magic = MAGIC_NUMBER;
 
   f = fopen(file_name, "w");
 
@@ -50,25 +71,8 @@ int write_tree_file(rb_tree *tree, const char *file_name)
   fwrite(&magic, 1, sizeof(int), f);
   fwrite(&N, 1, sizeof(int), f);
 
-
-  // Juicy part...
-  // TODO
-
-  /*
-  for (int i = 0; i < N; i++)
-  {
-      int r_len = (rand() + 4) % 20, r_n = rand();
-      str = rand_string(r_len);
-      
-      fprintf(stdout, "(%d) %s: %d\n", r_len, str, r_n);
-
-      fwrite(&r_len, 1, sizeof(int), f);
-      fwrite(str, r_len, sizeof(char), f);
-      fwrite(&r_n, 1, sizeof(int), f);
-
-      free(str);
-  }
-  */
+  if (tree->root != NIL)
+    write_node(tree->root, f);
 
   fclose(f);
   return 0;

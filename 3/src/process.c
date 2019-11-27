@@ -138,7 +138,7 @@ int process_file(rb_tree *tree, const char *f_name)
     elapsed = (double)(end - start) / CLOCKS_PER_SEC;
 
     if (DEBUG_TIME)
-        fprintf(stderr, "Processed '%s' in %3.6lf s.\n", f_name, elapsed);
+        fprintf(stderr, "INFO: Processed '%s' in %3.6lf s.\n", f_name, elapsed);
 
     if (line)
         free(line);
@@ -210,10 +210,10 @@ int process_list_files(rb_tree *tree, const char *fl_name, const char *path)
     elapsed = (double)(end - start) / CLOCKS_PER_SEC;
 
     if (DEBUG_TIME)
-        fprintf(stderr, "Processed %lu files in %3.6lf s.\n", processed, elapsed);
+        fprintf(stderr, "INFO: Processed %lu files in %3.6lf s.\n", processed, elapsed);
 
     if (DEBUG)
-        fprintf(stderr, "Encountered %lu errors (could not process a file).\n", error);
+        fprintf(stderr, "INFO: Encountered %lu errors (could not process a file).\n", error);
 
     if (line)
         free(line);

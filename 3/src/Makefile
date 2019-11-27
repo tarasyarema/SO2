@@ -1,5 +1,5 @@
 FILES_C = main.c red-black-tree.c
-TARGET = main
+TARGET = practica3
 
 CFLAGS = -Wall -Werror -O -g
 LFLAGS = -lm

@@ -16,13 +16,14 @@ int menu()
     char str[5];
     int opcio;
 
-    printf("\n\nMenu\n\n");
-    printf(" 1 - Creacio de l'arbre\n");
-    printf(" 2 - Emmagatzemar arbre a disc\n");
-    printf(" 3 - Llegir arbre de disc\n");
-    printf(" 4 - Consultar informacio de l'arbre\n");
-    printf(" 5 - Sortir\n\n");
-    printf("   Escull opcio: ");
+    printf(" Menu\n");
+    printf(" 1. Creacio de l'arbre\n");
+    printf(" 2. Emmagatzemar arbre a disc\n");
+    printf(" 3. Llegir arbre de disc\n");
+    printf(" 4. Consultar informacio de l'arbre\n");
+    printf(" 5. Sortir\n");
+    printf(" 6. Borrar l'arbre en memoria\n\n");
+    printf(" Escull opcio\n> ");
 
     fgets(str, 5, stdin);
     opcio = atoi(str); 
@@ -73,7 +74,7 @@ int init_tree_from_file(rb_tree *tree, const char *f_name)
    fp = fopen(f_name, "r");
    if (!fp)
    {
-      printf("Could not open file: %s\n", f_name);
+      fprintf(stderr, "ERROR: Could not open file: %s\n", f_name);
       return 1;
    }
 
@@ -116,7 +117,7 @@ int init_tree_from_file(rb_tree *tree, const char *f_name)
    elapsed = (double)(end - start) / CLOCKS_PER_SEC;
 
    if (DEBUG_TIME)
-      fprintf(stderr, "Processed %lu words in %3.6lf s.\n", processed, elapsed);
+      fprintf(stderr, "INFO: Processed %lu words in %3.6lf s.\n", processed, elapsed);
 
    if (line)
       free(line);
@@ -144,7 +145,7 @@ int print_tree_positive(rb_tree *tree, const char *f_name)
    fp = fopen(f_name, "r");
    if (!fp)
    {
-      fprintf(stderr, "Could not open file: %s\n", f_name);
+      fprintf(stderr, "ERROR: Could not open file: %s\n", f_name);
       return 1;
    }
 
@@ -214,7 +215,7 @@ int print_tree_positive_n(rb_tree *tree, const char *f_name, int n)
    fp = fopen(f_name, "r");
    if (!fp)
    {
-      fprintf(stderr, "Could not open file: %s\n", f_name);
+      fprintf(stderr, "ERROR: Could not open file: %s\n", f_name);
       return 1;
    }
 

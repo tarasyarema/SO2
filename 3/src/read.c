@@ -19,6 +19,10 @@ int read_tree_file(rb_tree *tree, const char *file_name)
         return 1;
     
     fread(&magic, 1, sizeof(int), f);
+
+    if (magic != MAGIC_NUMBER)
+        return 2;
+
     fread(&N, 1, sizeof(int), f);
     
     for (int i = 0; i < N; i++) 

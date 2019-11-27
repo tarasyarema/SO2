@@ -33,8 +33,9 @@
 int main(int argc, char **argv)
 {
     char str1[MAX_CHARS], str2[MAX_CHARS], path[MAX_CHARS];
-    int opcio;
-    
+    int opcio, return_code;
+    char started = 0;
+
     clock_t start, end;
     double elapsed;
 
@@ -42,38 +43,51 @@ int main(int argc, char **argv)
     node_data *search_node = NULL;
 
     if (argc != 1)
-        printf("Opcions de la linia de comandes ignorades\n");
+        fprintf(stderr, "ERROR: Opcions de la linia de comandes ignorades\n");
 
     do {
         // Some information about 
         // the current in-memory tree
 
-        fprintf(stdout, "INFO: ");
-        
-        if (tree == NULL)
-            fprintf(stdout, "Tree is empty\n");
+        if (started != 0)
+        {
+            if (tree == NULL)
+                fprintf(stdout, "\n Tree (%p): empty\n\n", tree);
+            else
+                fprintf(stdout, "\n Tree (%p): %ld nodes and %ld bytes\n\n", tree, tree->num_nodes, tree->size);
+        }
         else
-            fprintf(stdout, "Tree has %ld nodes\n", tree->size);
-        
+        {
+            started = 1;
+        }
+
         opcio = menu();
 
         switch (opcio) {
             case 1:
                 system("clear");
                 
-                printf("Fitxer de diccionari de paraules: ");
+                printf(" Fitxer de diccionari de paraules\n> ");
                 fgets(str1, MAX_CHARS, stdin);
                 str1[strlen(str1)-1]=0;
 
-                printf("Fitxer de base de dades: ");
+                printf(" Fitxer de base de dades\n> ");
                 fgets(str2, MAX_CHARS, stdin);
                 str2[strlen(str2)-1]=0;
 
-                // WE get the path of the DB file
+                // We get the path of the DB file
 
                 strcpy(path, dirname(str2));
                 strcat(path, "/");
-                fprintf(stdout, "%s - %s - %s\n", str1, str2, path);
+                
+                // We deallocate the tree if 
+                // there's one allocated already
+
+                if (tree != NULL)
+                {
+                    delete_tree(tree);
+                    free(tree);
+                }
 
                 // Allocate memory for the tree
                 // and init it from the given files.
@@ -84,33 +98,28 @@ int main(int argc, char **argv)
 
                 if (init_tree_from_file(tree, str1) != 0)
                 {
-                    fprintf(stderr,
-                            "Error on tree init.\nGiven dictionary: %s\nTree address: %p\n",
-                            str1, tree);
+                    fprintf(stderr, "ERROR: Could not init the tree from dict: %s\n", str1);
+                    break;
                 }
 
                 if (process_list_files(tree, str2, path) != 0)
-                {
-                   fprintf(stderr, "Error processing %s\n", str2);
-                }
+                   fprintf(stderr, "ERROR: Error processing %s\n", str2);
 
                 break;
 
             case 2:
                 system("clear");
                 
-                printf("Nom de fitxer en que es desara l'arbre: ");
+                printf(" Nom de fitxer en que es desara l'arbre\n> ");
                 fgets(str1, MAX_CHARS, stdin);
                 str1[strlen(str1)-1]=0;
-
-                fprintf(stdout, "Out file is: %s\n", str1);
 
                 // If the tree is empty
                 // we do not write...
 
                 if (tree == NULL)
                 {
-                    fprintf(stderr, "Tree is empty\n");
+                    fprintf(stderr, "ERROR: Tree is empty\n");
                     break;
                 }
                 
@@ -118,16 +127,16 @@ int main(int argc, char **argv)
                 // with the given binary format
 
                 if (write_tree_file(tree, str1) != 0) 
-                    fprintf(stderr, "Could not write tree to file \"%s\"\n", str1);
+                    fprintf(stderr, "ERROR: Could not write tree to file %s\n", str1);
                 else
-                    fprintf(stdout, "Wrote binary tree data to \"%s\"\n", str1);
+                    fprintf(stderr, "INFO: Wrote binary tree data to %s\n", str1);
 
                 break;
 
             case 3:
                 system("clear");
                 
-                printf("Nom del fitxer que conte l'arbre: ");
+                printf(" Nom del fitxer que conte l'arbre\n> ");
                 fgets(str1, MAX_CHARS, stdin);
                 str1[strlen(str1)-1]=0;
 
@@ -140,7 +149,7 @@ int main(int argc, char **argv)
                     init_tree(tree);
 
                     if (read_tree_file(tree, str1) != 0)
-                        fprintf(stderr, "Could not init tree from \"%s\"\n", str1);
+                        fprintf(stderr, "ERROR: Could not init tree from %s\n", str1);
 
                     break;
                 }
@@ -149,7 +158,7 @@ int main(int argc, char **argv)
                 // wants to delete the current tree and
                 // replace it with the one in the given file
 
-                fprintf(stdout, "There is a tree saved in memory, do you want to replace it? (y/n) ");
+                fprintf(stdout, " There is a tree saved in memory, do you want to replace it? (y/n)\n> ");
                 fgets(str2, MAX_CHARS, stdin);
                 str2[strlen(str2)-1] = 0;
                 
@@ -160,32 +169,38 @@ int main(int argc, char **argv)
                 // we deallocate the memory of the old one,
                 // so we don't have memory leaks.
 
-                fprintf(stderr, "Deleting old tree ... ");
+                fprintf(stderr, "INFO: Deleting old tree ... ");
                 delete_tree(tree);
                 free(tree);
                 fprintf(stderr, "done.\n");
 
 
-                fprintf(stderr, "Reading new tree from \"%s\" ... ", str1);
+                fprintf(stderr, "INFO: Reading new tree from %s ... ", str1);
                 
                 tree = (rb_tree *)malloc(sizeof(rb_tree));
                 init_tree(tree);
 
-                read_tree_file(tree, str1);
-                fprintf(stderr, "done.\n");
+                return_code = read_tree_file(tree, str1);
+
+                if (return_code == 1)
+                    fprintf(stderr, "\nERROR: Could not read from file %s.\n", str1);
+                else if (return_code == 2) 
+                    fprintf(stderr, "\nERROR: Magic number not equal\n");
+                else
+                    fprintf(stderr, "done.\n");
 
                 break;
 
             case 4:
                 system("clear");
                 
-                printf("Paraula a buscar o polsa enter per saber la paraula que apareix mes vegades: ");
+                fprintf(stdout, " Paraula a buscar o polsa enter per saber la paraula que apareix mes vegades\n> ");
                 fgets(str1, MAX_CHARS, stdin);
                 str1[strlen(str1)-1]=0;
 
                 if (tree == NULL)
                 {
-                    fprintf(stderr, "Tree is empty\n");
+                    fprintf(stderr, "ERROR: Tree is empty\n");
                     break;
                 }
 
@@ -196,24 +211,27 @@ int main(int argc, char **argv)
                 {
                     if (tree->root == NIL || tree->root->data == NULL)
                     {
-                        fprintf(stderr, "Root node is nil\n");
+                        fprintf(stderr, "ERROR: Root node is nil\n");
                         break;
                     }
 
                     search_node = tree->root->data;
 
-                    fprintf(stdout, "Searching for the best node ... ");
+                    fprintf(stderr, "INFO: Searching for the best node ... ");
                     
                     start = clock();
                     find_node_best(tree->root, &search_node);
                     end = clock();
-                    fprintf(stdout, "done.\n");
+
+                    fprintf(stderr, "done.\n");
                     
                     elapsed = (double)(end - start) / CLOCKS_PER_SEC;
-                    if (DEBUG_TIME)
-                        fprintf(stderr, "Search time: %3.6lf s.\n", elapsed);
 
-                    fprintf(stdout, "%s: %d\n", search_node->key, search_node->num_times);
+                    if (DEBUG_TIME)
+                        fprintf(stderr, "INFO: Search time: %3.6lf s.\n", elapsed);
+
+                    fprintf(stdout, "\n key:       %s\n", search_node->key);
+                    fprintf(stdout, " num_times: %d\n", search_node->num_times);
 
                     break;
                 }
@@ -227,12 +245,17 @@ int main(int argc, char **argv)
 
                 elapsed = (double)(end - start) / CLOCKS_PER_SEC;
                 if (DEBUG_TIME)
-                    fprintf(stderr, "Search time: %3.6lf s.\n", elapsed);
+                    fprintf(stderr, "INFO: Search time: %3.6lf s.\n", elapsed);
                 
                 if (search_node == NULL)
-                    fprintf(stdout, "Word \"%s\" not found in the tree.\n", str1);
+                {
+                    fprintf(stdout, "\n Word '%s' not found in the tree.\n", str1);
+                }
                 else
-                    fprintf(stdout, "%s: %d\n", search_node->key, search_node->num_times);
+                {
+                    fprintf(stdout, "\n key:       %s\n", search_node->key);
+                    fprintf(stdout, " num_times: %d\n", search_node->num_times);
+                }
 
                 break;
 
@@ -245,21 +268,38 @@ int main(int argc, char **argv)
 
                 if (tree != NULL)
                 {
-                    fprintf(stderr, "Freeing in-memory tree ...");
+                    fprintf(stderr, "INFO: Freeing in-memory tree ...");
 
                     delete_tree(tree);
                     free(tree);
 
-                    fprintf(stdout, " done.\n");
+                    fprintf(stderr, " done.\n");
+                    break;
+                }
+
+                fprintf(stderr, "INFO: Tree already null.\n");
+                break;
+               
+            case 6:
+                system("clear");
+
+                if (tree != NULL)
+                {
+                    fprintf(stderr, "INFO: Freeing in-memory tree ...");
+                    
+                    delete_tree(tree);
+                    free(tree);
+                    tree = NULL;
+                    fprintf(stderr, " done.\n");
 
                     break;
                 }
-                
-                fprintf(stdout, "Tree already null.\n");
-                break;
+
+                fprintf(stderr, "INFO: Tree already null.");
+                break;               
 
             default:
-                printf("Opcio no valida\n");
+                fprintf(stderr, "ERROR: Opcio no valida\n");
 
         }
     }

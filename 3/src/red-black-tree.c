@@ -127,6 +127,7 @@ void init_tree(rb_tree *tree)
 {
     tree->root = NIL;
     tree->size = 0;
+    tree->num_nodes = 0;
 }
 
 /**
@@ -144,9 +145,9 @@ node_data *find_node(rb_tree *tree, char *key)
     {
         if (DEBUG_TREE)
         {
-            printf("(find_node) current: %s | key: %s\n", current->data->key, key);
-            printf("current: %p\n", current->data->key);
-            printf("key:     %p\n", key);
+            fprintf(stderr, "DEBUG: (find_node) current: %s | key: %s\n", current->data->key, key);
+            fprintf(stderr, "DEBUG: current: %p\n", current->data->key);
+            fprintf(stderr, "DEBUG: key:     %p\n", key);
         }
 
         if (compare_key1_equal_to_key2(key, current->data->key))
@@ -361,13 +362,15 @@ void insert_node(rb_tree *tree, node_data *data)
     /* Find where node belongs */
     current = tree->root;
     parent = 0;
+
     while (current != NIL)
     {
         if (compare_key1_equal_to_key2(data->key, current->data->key))
         {
-            printf("insert_node: trying to insert but primary key is already in tree.\n");
+            fprintf(stderr, "ERROR: insert_node: trying to insert but primary key is already in tree.\n");
             return;
         }
+
         parent = current;
         current = compare_key1_less_than_key2(data->key, current->data->key) ? current->left : current->right;
     }
@@ -406,7 +409,8 @@ void insert_node(rb_tree *tree, node_data *data)
     }
 
     /* Update the tree size */
-    ++tree->size;
+    ++tree->num_nodes;
+    tree->size += (strlen(x->data->key) * sizeof(char) + sizeof(int)); 
 
     insert_fixup(tree, x);
 }
