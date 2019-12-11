@@ -414,7 +414,6 @@ void insert_node(rb_tree *tree, node_data *data)
     if ((x = malloc(sizeof(*x))) == 0)
     {
         fprintf(stderr, "ERROR: Insufficient memory (insert_node)\n");
-        fprintf(stderr, "ERROR: %p -> (%s, %d, %p)\n", data, data->key, data->num_times, &data->sem);
         exit(1);
     }
 
@@ -424,7 +423,6 @@ void insert_node(rb_tree *tree, node_data *data)
        function. */
 
     x->data = data;
-    // x->data->sem = sem_open(x->data->key, O_CREAT,  0644, 0);
 
     /* Copy remaining data */
     x->parent = parent;

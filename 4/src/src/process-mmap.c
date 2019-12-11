@@ -5,6 +5,66 @@
 #include "config.h"
 #include "red-black-tree.h"
 
+void _process_line_mmap(rb_tree *tree, char *line, int id)
+{
+    node_data *n_data;
+
+    int i, j, is_word, len_line;
+    char paraula[MAX_CHARS];
+
+    i = 0;
+
+    len_line = strlen(line);
+
+    /* Search for the beginning of a candidate word */
+
+    while ((i < len_line) && (isspace(line[i]) || ((ispunct(line[i])) && (line[i] != '#'))))
+        i++;
+
+    /* This is the main loop that extracts all the words */
+
+    while (i < len_line)
+    {
+        j = 0;
+        is_word = 1;
+
+        /* Extract the candidate word including digits if they are present */
+
+        do
+        {
+
+            if ((isalpha(line[i])) || (line[i] == '\''))
+                paraula[j] = line[i];
+            else
+                is_word = 0;
+
+            j++;
+            i++;
+
+            /* Check if we arrive to an end of word: space or punctuation character */
+
+        } while ((i < len_line) && (!isspace(line[i])) && (!(ispunct(line[i]) && (line[i] != '\'') && (line[i] != '#'))));
+
+        /* If word insert in list */
+
+        if (is_word)
+        {
+
+            /* Put a '\0' (end-of-word) at the end of the string*/
+            paraula[j] = 0;
+
+            /* Search for the word in the tree */
+            n_data = find_node(tree, paraula);
+
+            if (n_data != NULL)
+            {
+                sem_wait(&n_data->sem);
+                n_data->num_times++;
+                sem_post(&n_data->sem);
+            }
+        }
+    }
+}
 /**
  * 
  * Given a line, extract the words it contains and print them to screen
@@ -38,32 +98,32 @@ void process_line_mmap(rb_tree *tree, char *line, int id)
                 // The changes are here:
                 // If the current character
                 // is a "'" (apostrophe) or a "-" (slash).
-                // Then we check if the character 
+                // Then we check if the character
                 // before is alpha.
-                
+
                 if (line[i] == '\'')
                 {
-                    if (i > 0 && i+1 < len_line)
-                        if (isalpha(line[i-1]) && isalpha(line[i+1]))
+                    if (i > 0 && i + 1 < len_line)
+                        if (isalpha(line[i - 1]) && isalpha(line[i + 1]))
                             continue;
-                    
+
                     break;
                 }
 
                 if (line[i] == '-')
                 {
-                    if (i > 0 && i+1 < len_line)
+                    if (i > 0 && i + 1 < len_line)
                     {
-                        if (isalpha(line[i-1]) && isalpha(line[i+1]))
+                        if (isalpha(line[i - 1]) && isalpha(line[i + 1]))
                             break;
                     }
                     else if (i > 0)
                     {
-                        if (isalpha(line[i-1]))
+                        if (isalpha(line[i - 1]))
                             break;
                     }
                 }
-                
+
                 is_word = 0;
             }
 
@@ -203,7 +263,7 @@ int process_list_files_mmap(char *ptr, const char *fl_name, const char *path)
         {
             if (DEBUG)
                 fprintf(stderr, "WARN: Could not process file %s\n", file_name);
-            
+
             ++error;
             file_name[0] = '\0';
             continue;

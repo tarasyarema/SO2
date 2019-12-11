@@ -69,6 +69,14 @@ char *dbfnames_to_mmap(FILE *fp_db)
   return mmap_dbfnames;
 }
 
+/*
+ *
+ * Reimplementation of dbfnames_to_mmap
+ * so that it handles the new node_data structure
+ * with the semaphore
+ * 
+ */
+
 char *_dbfnames_to_mmap(FILE *fp_db)
 {
   int i, size_mmap, num_files, *p_num_files;

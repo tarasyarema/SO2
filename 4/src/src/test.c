@@ -37,26 +37,26 @@
 #include "read.c"
 #include "write.c"
 
-#define MAX_FORKS 10
-
-typedef struct shared_mem {
-    sem_t s;
-    double elapsed;
-} total_elapsed;
-
-total_elapsed *t_elapsed;
+#define MAX_FORKS 2
 
 int main(int argc, char **argv)
 {
     FILE *db_file;
-    char *target = "the", *dict_filename = "w", *db_filename = "hardcore";
+    char *dict_filename = "w", *db_filename = "test_data/l";
 
     rb_tree *tree = NULL;
     char *tree_mmap, *db_mmap;
-    int db_files_n, forks;
+    int db_files_n, forks = MAX_FORKS;
 
-    clock_t start, end;
-    double elapsed;
+    if (argc > 1)
+    {
+        forks = atoi(argv[1]);
+    }
+
+    if (argc > 2)
+    {
+        db_filename = argv[2];
+    }
 
     tree = (rb_tree *)malloc(sizeof(rb_tree));
     init_tree(tree);
@@ -68,66 +68,45 @@ int main(int argc, char **argv)
     if (db_file == NULL) return 1;
 
     db_mmap = _dbfnames_to_mmap(db_file);
-    
+
     fclose(db_file);
 
     db_files_n = *((int *)db_mmap);
-    forks = db_files_n < MAX_FORKS ? db_files_n : MAX_FORKS;
 
+    if (DEBUG)
+        fprintf(stderr, "INFO: Number of files to process %d\n", db_files_n);
+    
     // Multiprocess shit
 
     int pids[forks], n = forks;
     int status, pid;
 
-    t_elapsed = mmap(NULL, sizeof(total_elapsed), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1 , 0);
-    t_elapsed->elapsed = 0.0;
-    sem_init(&t_elapsed->s, 1, 1);
-
-    for (int i = 0; i < n; ++i) 
+    for (int i = 0; i < n; ++i)
     {
-        if ((pids[i] = fork()) < 0) 
+        if ((pids[i] = fork()) < 0)
         {
             perror("ERROR: Could not fork...");
             abort();
-        } 
-        else if (pids[i] == 0) 
+        }
+        else if (pids[i] == 0)
         {
-            // clock_t f_start = clock();
-
             pid = getpid();
-            process_list_files_sem(db_mmap, tree_mmap, pid, i);
-            
-            // clock_t f_end = clock();
-            // sem_wait(&t_elapsed->s);
-            // t_elapsed->elapsed += (double)(f_end - f_start) / CLOCKS_PER_SEC;
-            // sem_post(&t_elapsed->s);
-
+            process_list_files_sem(db_mmap, tree_mmap, pid, 0);
             exit(0);
         }
     }
 
     // Wait for the processes to finish
 
-    while (n > 0) 
+    while (n > 0)
     {
         pid = wait(&status);
-        // fprintf(stderr, "INFO: Child with PID %ld exited with status 0x%x.\n", (long)pid, status);
+
+        if (DEBUG)
+            fprintf(stderr, "INFO: Child with PID %ld exited with status 0x%x.\n", (long)pid, status);
+        
         --n;
     }
-    
-    if (DEBUG_TIME)
-        fprintf(stderr, "INFO: Elapsed %4.8lf s.\n", t_elapsed->elapsed);
-    
-    munmap(t_elapsed, sizeof(total_elapsed));
-
-    fprintf(stdout, "Child processes: %d\n", forks);
-
-    start = clock();
-    _find_node(tree, target);
-    end = clock();
-
-    elapsed = (double)(end - start) / CLOCKS_PER_SEC;
-    printf("Tree search:   %3.6lf s.\n", elapsed);
 
     deserialize_node_data_from_mmap(tree, tree_mmap);
 
