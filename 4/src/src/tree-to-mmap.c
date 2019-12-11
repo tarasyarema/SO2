@@ -178,6 +178,7 @@ void deserialize_node_data_from_mmap_recursive(node *x)
 
     n_data_dest->key       = n_data_ori->key;
     n_data_dest->num_times = n_data_ori->num_times;
+    n_data_dest->sem       = n_data_ori->sem;
 
     /* Assign to the node of the tree */
 

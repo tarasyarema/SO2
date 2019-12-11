@@ -2,7 +2,7 @@ FILES_C_TEST = test.c red-black-tree.c dbfnames-mmap.c tree-to-mmap.c
 FILES_C = main.c red-black-tree.c dbfnames-mmap.c tree-to-mmap.c
 
 TARGET_TEST = main_test
-TARGET = main
+TARGET = practica4
 
 CFLAGS = -Wall -Werror -O -g
 LFLAGS = -lm -pthread
