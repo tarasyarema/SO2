@@ -48,7 +48,6 @@ void free_node_data(node_data *data)
      * 
      */
     
-    sem_close(&data->sem);
     free(data->key);
     free(data);
 }

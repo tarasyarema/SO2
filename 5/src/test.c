@@ -9,12 +9,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <semaphore.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
+#include <pthread.h>
 
 // Config variables
 #include "config.h"
@@ -22,98 +17,95 @@
 // Red-Black tree structures and functions
 #include "red-black-tree.h"
 
-// Mmap functions
-#include "tree-to-mmap.h"
-#include "dbfnames-mmap.h"
-
-#include "utils-mmap.c"
-#include "process-mmap.c"
-
-
 // Utility functions and
 // file processers
 #include "utils.c"
-#include "process.c"
+#include "process-threads.c"
 #include "read.c"
-#include "write.c"
 
-#define MAX_FORKS 2
+pthread_t ntid[MAX_THREADS];
 
 int main(int argc, char **argv)
 {
     FILE *db_file;
-    char *dict_filename = "w", *db_filename = "test_data/l";
+    file *files = NULL;
+    char *dict_filename = "data/w", *db_filename = "data/l";
+    char line[MAX_CHARS];
 
     rb_tree *tree = NULL;
-    char *tree_mmap, *db_mmap;
-    int db_files_n, forks = MAX_FORKS;
+    node_data *node = NULL;
+
+    int num_files, threads = MAX_THREADS;
 
     if (argc > 1)
-    {
-        forks = atoi(argv[1]);
-    }
+        threads = atoi(argv[1]);
 
     if (argc > 2)
-    {
         db_filename = argv[2];
-    }
 
     tree = (rb_tree *)malloc(sizeof(rb_tree));
     init_tree(tree);
 
-    if (init_tree_from_file(tree, dict_filename) != 0) return 1;
-    tree_mmap = serialize_node_data_to_mmap(tree);
+    if (init_tree_from_file(tree, dict_filename) != 0)
+        return 1;
 
     db_file = fopen(db_filename, "r");
-    if (db_file == NULL) return 1;
+    if (db_file == NULL)
+        return 1;
 
-    db_mmap = _dbfnames_to_mmap(db_file);
+    fgets(line, MAX_CHARS, db_file);
+
+    num_files = atoi(line);
+
+    if (num_files <= 0)
+        exit(1);
+
+    files = (file *)malloc(num_files * sizeof(file));
+
+    /* Read database file names */
+
+    for (int i = 0; i < num_files; i++)
+    {
+        /* Read file name */
+
+        fgets(line, MAX_CHARS, db_file);
+        line[strlen(line) - 1] = 0;
+
+        strcpy(files[i].name, line);
+        files[i].mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+        files[i].read = 0;
+    }
 
     fclose(db_file);
 
-    db_files_n = *((int *)db_mmap);
+    arguments *args = malloc(sizeof(*args));
 
-    if (DEBUG)
-        fprintf(stderr, "INFO: Number of files to process %d\n", db_files_n);
-    
-    // Multiprocess shit
+    args->tree = tree;
+    args->files = files;
+    args->num_files = num_files;
 
-    int pids[forks], n = forks;
-    int status, pid;
-
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < MAX_THREADS; i++)
     {
-        if ((pids[i] = fork()) < 0)
+        if (pthread_create(&ntid[i], NULL, process_list_files_mutex, args) != 0)
         {
-            perror("ERROR: Could not fork...");
-            abort();
-        }
-        else if (pids[i] == 0)
-        {
-            pid = getpid();
-            process_list_files_sem(db_mmap, tree_mmap, pid, 0);
-            exit(0);
+            free(args);
+            exit(1);
         }
     }
 
-    // Wait for the processes to finish
-
-    while (n > 0)
+    for (int i = 0; i < MAX_THREADS; i++)
     {
-        pid = wait(&status);
-
-        if (DEBUG)
-            fprintf(stderr, "INFO: Child with PID %ld exited with status 0x%x.\n", (long)pid, status);
-        
-        --n;
+        if (pthread_join(ntid[i], NULL) != 0) 
+        {
+            free(args);
+            exit(1);
+        }
     }
-
-    deserialize_node_data_from_mmap(tree, tree_mmap);
 
     delete_tree(tree);
     free(tree);
-
-    _dbfnames_munmmap(db_mmap);
+    free(files);
+    free(args);
 
     return 0;
 }

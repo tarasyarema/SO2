@@ -1,13 +1,12 @@
 /**
  *
- * SO2 - Practica 4
+ * SO2 - Practica 5
  * @author Taras Yarema
- * @date 2019-12-11
+ * @date 2020-01-03
  * @email tarasyaremabcn@gmail.com
  *
  */
 
-// General user libraries
 #include <stdio.h>
 #include <string.h>
 #include <libgen.h>
@@ -18,46 +17,25 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <semaphore.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
+#include <pthread.h>
 
-// Config variables
 #include "config.h"
-
-// Red-Black tree structures and functions
 #include "red-black-tree.h"
+#include "process-threads.c"
 
-// Mmap functions
-#include "tree-to-mmap.h"
-#include "dbfnames-mmap.h"
-
-#include "utils-mmap.c"
-#include "process-mmap.c"
-
-// Utility functions and
-// file processers
 #include "utils.c"
-#include "process.c"
 #include "read.c"
 #include "write.c"
 
-#define MAX_FORKS 4
+pthread_t ntid[MAX_THREADS];
 
 int main(int argc, char **argv)
 {
     FILE *db_file;
 
-    char *tree_mmap, *db_mmap;
-    int db_files_n, forks = MAX_FORKS;
+    int num_files, n_threads;
 
-    int pids[forks], n;
-    int status, pid;
-
-    char str1[MAX_CHARS], str2[MAX_CHARS], path[MAX_CHARS];
+    char str1[MAX_CHARS], str2[MAX_CHARS], path[MAX_CHARS], line[MAX_CHARS];
     int opcio, return_code;
     char started = 0;
 
@@ -66,6 +44,7 @@ int main(int argc, char **argv)
 
     rb_tree *tree = NULL;
     node_data *search_node = NULL;
+    file *files = NULL;
 
     if (argc != 1)
         fprintf(stderr, "ERROR: Opcions de la linia de comandes ignorades\n");
@@ -75,7 +54,7 @@ int main(int argc, char **argv)
         // Some information about
         // the current in-memory tree
 
-        fprintf(stdout, "\n Processes we will use: %d\n", forks);
+        fprintf(stdout, "\n MAX_THREADS: %d\n", MAX_THREADS);
 
         if (started != 0)
         {
@@ -127,63 +106,84 @@ int main(int argc, char **argv)
 
             if (init_tree_from_file(tree, str1) != 0)
                 return 1;
-            
-            tree_mmap = serialize_node_data_to_mmap(tree);
 
             db_file = fopen(str2, "r");
 
             if (db_file == NULL)
                 return 1;
 
-            db_mmap = _dbfnames_to_mmap(db_file);
+            fgets(line, MAX_CHARS, db_file);
+
+            num_files = atoi(line);
+
+            if (num_files <= 0)
+            {
+                fprintf(stderr, "ERROR: Number of files is %d <= 0\n", num_files);
+                return 1;
+            }
+
+            files = (file *)malloc(num_files * sizeof(file));
+
+            /* Read database file names */
+
+            for (int i = 0; i < num_files; i++)
+            {
+                /* Read file name */
+
+                fgets(line, MAX_CHARS, db_file);
+                line[strlen(line) - 1] = 0;
+
+                strcpy(files[i].name, line);
+                files[i].mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+                files[i].read = 0;
+            }
 
             fclose(db_file);
 
-            db_files_n = *((int *)db_mmap);
-
             if (DEBUG)
-                fprintf(stderr, "INFO: Number of files to process %d\n", db_files_n);
+                fprintf(stderr, "INFO: Number of files to process %d\n", num_files);
 
-            // Multiprocess shit
+            // Multi-thread shit
 
-            n = forks;
+            arguments *args = malloc(sizeof(*args));
 
-            for (int i = 0; i < n; ++i)
+            args->tree = tree;
+            args->files = files;
+            args->num_files = num_files;
+
+            // Use the min. of the 
+            // number of files and the MAX_THREADS constant
+
+            n_threads = num_files > MAX_THREADS ? MAX_THREADS : num_files;
+            fprintf(stdout, " Threads we will use: %d\n", n_threads);
+
+            for (int i = 0; i < n_threads; i++)
             {
-                if ((pids[i] = fork()) < 0)
+                if (pthread_create(&ntid[i], NULL, process_list_files_mutex, args) != 0)
                 {
-                    perror("ERROR: Could not fork...");
-                    abort();
-                }
-                else if (pids[i] == 0)
-                {
-                    pid = getpid();
-                    process_list_files_sem(db_mmap, tree_mmap, pid, 0);
-                    exit(0);
+                    free(args);
+                    exit(1);
                 }
             }
 
-            // Wait for the processes to finish
-
-            while (n > 0)
+            for (int i = 0; i < n_threads; i++)
             {
-                pid = wait(&status);
-
-                if (DEBUG)
-                    fprintf(stderr, "INFO: Child with PID %ld exited with status 0x%x.\n", (long)pid, status);
-
-                --n;
+                if (pthread_join(ntid[i], NULL) != 0) 
+                {
+                    free(args);
+                    exit(1);
+                }
             }
 
-            deserialize_node_data_from_mmap(tree, tree_mmap);
-            _dbfnames_munmmap(db_mmap);
+            free(files);
+            free(args);
 
             break;
 
         case 2:
             system("clear");
 
-            printf(" Nom de fitxer en que es desara l'arbre\n> ");
+            fprintf(stdout, " Nom de fitxer en que es desara l'arbre\n> ");
             fgets(str1, MAX_CHARS, stdin);
             str1[strlen(str1) - 1] = 0;
 
@@ -209,7 +209,7 @@ int main(int argc, char **argv)
         case 3:
             system("clear");
 
-            printf(" Nom del fitxer que conte l'arbre\n> ");
+            fprintf(stdout, " Nom del fitxer que conte l'arbre\n> ");
             fgets(str1, MAX_CHARS, stdin);
             str1[strlen(str1) - 1] = 0;
 

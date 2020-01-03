@@ -32,7 +32,7 @@ typedef struct node_data_
     // within the structure. You may adapt it to your needs:
     // add or remove fields as you need.
     int num_times;
-    sem_t sem;   
+    pthread_mutex_t mutex;   
 } node_data; 
 
 /**

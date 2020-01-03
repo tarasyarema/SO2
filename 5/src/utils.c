@@ -91,14 +91,7 @@ int init_tree_from_file(rb_tree *tree, const char *f_name)
 
    while (getline(&line, &len, fp) != -1)
    {
-      // Get rid of the '\n' char
-      // in the end of every line
-
       strtok(line, "\n");
-
-      // The + 1 is for the null operator
-      // strcpy adds to str.
-      // (Thanks valgrind)
 
       str = malloc((strlen(line) + 1) * sizeof(char));
       strcpy(str, line);
@@ -111,9 +104,7 @@ int init_tree_from_file(rb_tree *tree, const char *f_name)
 
          n_data->key = str;
          n_data->num_times = 0;
-         sem_init(&n_data->sem, 1, 1);
-
-         // fprintf(stderr, "INFO: Inserting node '%s' (%ld)\n", sem_name, processed);
+         n_data->mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
 
          insert_node(tree, n_data);
          ++processed;

@@ -1,11 +1,11 @@
-FILES_C_TEST = test.c red-black-tree.c dbfnames-mmap.c tree-to-mmap.c
-FILES_C = main.c red-black-tree.c dbfnames-mmap.c tree-to-mmap.c
+FILES_C_TEST = test.c red-black-tree.c
+FILES_C = main.c red-black-tree.c
 
-TARGET_TEST = main_test
-TARGET = practica4
+TARGET_TEST = test
+TARGET = practica5
 
 CFLAGS = -Wall -Werror -O -g
-LFLAGS = -lm -pthread
+LFLAGS = -lm -lpthread
 
 FILES_O_TEST = $(subst .c,.o,$(FILES_C_TEST))
 FILES_O = $(subst .c,.o,$(FILES_C))
@@ -22,7 +22,7 @@ clean:
 	rm --force $(FILES_O) $(TARGET) 
 
 $(TARGET_TEST): $(FILES_O_TEST) Makefile
-	gcc $(FILES_O) -o $(TARGET_TEST) $(LFLAGS) 
+	gcc $(FILES_O_TEST) -o $(TARGET_TEST) $(LFLAGS) 
 
 test: $(TARGET_TEST) 
 
