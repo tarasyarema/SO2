@@ -6,7 +6,7 @@
 
 #### 1
 
-- Nota: 5 (entregada tard).
+- Nota: 5/10 (entregada tard).
 - Comentaris
   - Primera pràctica, sense més.
 - Dificultat: Fàcil (2-3 hores).
@@ -15,7 +15,7 @@
 
 #### 2
 
-- Nota: 6.5
+- Nota: 6.5/10
 - Comentaris: 
   - Implemetació del *core* que s'anirà utilitzant en les següents pràctiques.
 - Defectes: 
@@ -27,7 +27,7 @@
 
 #### 3
 
-- Nota: 10
+- Nota: 10/10
 - Comentaris: 
   - Crear el menú. Un cop tens les funcions per a guardar i llegir l'arbre en el format binàri donat, és trivial.
 - Dificultat: Fàcil (6-8 hores).
@@ -36,7 +36,7 @@
 
 #### 4
 
-- Nota: ?
+- Nota: 11/10
 - Comentaris: 
   - Programació multi proccés.
   - Memòria compartida (`mmap`).
@@ -52,7 +52,7 @@
 
 #### 5
 
-- Nota: ?
+- Nota: ?/10
 - Comentaris: 
   - Programació multi fils.
   - Si es revisa la teoria, es bastant directe. 
